@@ -41,7 +41,7 @@ func MakeDeployHandler(functionNamespace string, factory k8s.FunctionFactory) ht
 		}
 
 		body, _ := io.ReadAll(r.Body)
-
+		fmt.Println(body)
 		request := types.FunctionDeployment{}
 		err := json.Unmarshal(body, &request)
 		if err != nil {
@@ -176,6 +176,16 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
 		return nil, err
 	}
 
+	//name := "shm"
+	//mountPath := "/dev/shm"
+
+	shmVolumes := createShmVolumes(request)
+	shmVolumeMounts := createShmVolumeMounts(request)
+
+        //directory := corev1.HostPathDirectory
+	privileged := getPrivileged(request)
+	var runasuser int64 = getRunAsUser(request)
+
 	deploymentSpec := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        request.Service,
@@ -231,11 +241,32 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
 							ReadinessProbe:  probes.Readiness,
 							SecurityContext: &corev1.SecurityContext{
 								ReadOnlyRootFilesystem: &request.ReadOnlyRootFilesystem,
+								Privileged: &privileged,
+								RunAsUser: &runasuser,
 							},
+							VolumeMounts: shmVolumeMounts,
+							/*VolumeMounts: []corev1.VolumeMount{
+								{
+									Name: "shm",
+									MountPath: "/dev/shm",
+								},
+							},*/
 						},
 					},
 					RestartPolicy: corev1.RestartPolicyAlways,
 					DNSPolicy:     corev1.DNSClusterFirst,
+					Volumes: shmVolumes,
+					/*Volumes: []corev1.Volume {
+						{
+							Name: "shm",
+							VolumeSource: corev1.VolumeSource {
+								HostPath: &corev1.HostPathVolumeSource {
+									Path: "/dev/shm",
+									Type: &directory,
+								},
+							},
+						},
+					},*/
 				},
 			},
 		},
@@ -400,6 +431,64 @@ func createResources(request types.FunctionDeployment) (*apiv1.ResourceRequireme
 
 	return resources, nil
 }
+
+func getPrivileged(request types.FunctionDeployment) bool {
+	return request.Privileged
+}
+
+func getRunAsUser(request types.FunctionDeployment) int64 {
+	runasuser, _ := strconv.ParseInt(request.RunAsUser, 10, 64)
+	return runasuser
+}
+
+func createShmVolumes(request types.FunctionDeployment) []corev1.Volume {
+	fmt.Println("Creating SHM Volumes!!!!")
+	shmVolumes := []corev1.Volume{}
+	directory := corev1.HostPathDirectoryOrCreate
+	fmt.Println(len(request.Shm))
+	for _, shm := range request.Shm {
+		fmt.Println(shm)
+		shmVolumes = append(shmVolumes, corev1.Volume{
+			Name:  shm,
+			VolumeSource: corev1.VolumeSource {
+				HostPath: &corev1.HostPathVolumeSource {
+					Path: "/dev/shm/"+shm,
+					Type: &directory,
+				},
+			},
+		})
+	}
+	return shmVolumes
+}
+
+func createShmVolumeMounts(request types.FunctionDeployment) []corev1.VolumeMount {
+        shmVolumeMounts := []corev1.VolumeMount{}
+        for _, shm := range request.Shm {
+                shmVolumeMounts = append(shmVolumeMounts, corev1.VolumeMount {
+                        Name:  shm,
+			MountPath: "/dev/shm/"+shm,
+			ReadOnly: false,
+                        })
+        }
+        return shmVolumeMounts
+}
+
+/*func createVolumes(volumes types.FunctionDeployment) []corev1.Volume {
+	volume := &apiv1.Volume
+	volume.Name = "shm";
+	volume.VolumeSource = &apiv1.VolumeSource
+	volume.VolumeSource.HostPath = &apiv1.HostPathVolumeSource
+	volume.VolumeSource.HostPath.HostPathVolumeSource.Path = "/dev/shm"
+	volume.VolumeSource.HostPath.HostPathVolumeSource.HostPathType = "Directory"
+	return volume
+}*/
+
+/*func createVolumeMount() *apiv1.VolumeMount{
+	volumeMount := &apiv1.VolumeMount
+	volumeMount.Name = "shm"
+        volumeMount.MountPath = "/dev/shm"
+        return volumeMount
+}*/
 
 func getMinReplicaCount(labels map[string]string) *int32 {
 	if value, exists := labels["com.openfaas.scale.min"]; exists {
