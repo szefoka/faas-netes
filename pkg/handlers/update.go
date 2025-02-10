@@ -115,7 +115,11 @@ func updateDeploymentSpec(
 
 		deployment.Spec.Template.Spec.Containers[0].ImagePullPolicy = corev1.PullAlways
 
-		deployment.Spec.Template.Spec.Containers[0].Env = buildEnvVars(&request)
+   		env, err := buildEnvVars(&request)
+        if err != nil {
+            return http.StatusBadRequest, err
+        }
+   		deployment.Spec.Template.Spec.Containers[0].Env = env
 
 		factory.ConfigureReadOnlyRootFilesystem(request, deployment)
 		factory.ConfigureContainerUserID(deployment)

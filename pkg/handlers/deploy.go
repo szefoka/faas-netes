@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+    "errors"
 
 	"github.com/openfaas/faas-netes/pkg/k8s"
 
@@ -132,7 +133,10 @@ func MakeDeployHandler(functionNamespace string, factory k8s.FunctionFactory, fu
 }
 
 func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[string]*corev1.Secret, factory k8s.FunctionFactory) (*appsv1.Deployment, error) {
-	envVars := buildEnvVars(&request)
+	envVars, err := buildEnvVars(&request)
+    if err != nil {
+        return nil, err
+    }
 
 	initialReplicas := int32p(initialReplicasCount)
 	labels := map[string]string{
@@ -302,7 +306,7 @@ func buildAnnotations(request types.FunctionDeployment) (map[string]string, erro
 	return annotations, nil
 }
 
-func buildEnvVars(request *types.FunctionDeployment) []corev1.EnvVar {
+func buildEnvVars(request *types.FunctionDeployment) ([]corev1.EnvVar, error) {
 	envVars := []corev1.EnvVar{}
 
 	if len(request.EnvProcess) > 0 {
@@ -319,11 +323,37 @@ func buildEnvVars(request *types.FunctionDeployment) []corev1.EnvVar {
 		})
 	}
 
+    if request.EDFParams != nil {
+        if len(request.EDFParams.Runtime) == 0 {
+            return envVars, errors.New("EDF Runtime is missing")
+        }
+        envVars = append(envVars, corev1.EnvVar{
+            Name:  "EDFRUNTIME",
+            Value: request.EDFParams.Runtime,
+        })
+
+        if len(request.EDFParams.Deadline) == 0 {
+            return envVars, errors.New("EDF Deadline is missing")
+        }
+        envVars = append(envVars, corev1.EnvVar{
+            Name:  "EDFDEADLINE",
+            Value: request.EDFParams.Deadline,
+        })
+        if len(request.EDFParams.Period) == 0 {
+            return envVars, errors.New("EDF Period is missing")
+        }
+        envVars = append(envVars, corev1.EnvVar{
+            Name:  "EDFPERIOD",
+            Value: request.EDFParams.Period,
+        })
+    }
+
+
 	sort.SliceStable(envVars, func(i, j int) bool {
 		return strings.Compare(envVars[i].Name, envVars[j].Name) == -1
 	})
 
-	return envVars
+	return envVars, nil
 }
 
 func int32p(i int32) *int32 {

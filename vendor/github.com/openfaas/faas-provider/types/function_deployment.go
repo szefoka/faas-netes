@@ -39,6 +39,8 @@ type FunctionDeployment struct {
 	// Requests of resources requested by function
 	Requests *FunctionResources `json:"requests,omitempty"`
 
+    EDFParams *FunctionEDFParams `json:"EDF,omitempty"`
+
 	// ReadOnlyRootFilesystem removes write-access from the root filesystem
 	// mount-point.
 	ReadOnlyRootFilesystem bool `json:"readOnlyRootFilesystem,omitempty"`
@@ -52,4 +54,10 @@ type FunctionResources struct {
 	NvidiaGPU string `json:"nvidia.com/gpu,omitempty"`
 	AmdGPU    string `json:"amd.com/gpu,omitempty"`
 	IntelGPU  string `json:"intel.com/gpu,omitempty"`
+}
+
+type FunctionEDFParams struct {
+    Runtime  string `json:"runtime,omitempty"`
+    Deadline string `json:"deadline,omitempty"`
+    Period   string `json:"period,omitempty"`
 }
