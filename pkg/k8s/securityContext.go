@@ -73,3 +73,16 @@ func (f *FunctionFactory) ConfigureReadOnlyRootFilesystem(request types.Function
 		)
 	}
 }
+
+func (f* FunctionFactory) ConfiugrePrivilegedFlag(request types.FunctionDeployment, deployment *appsv1.Deployment) {
+    var privileged bool = true
+    if request.EDFParams != nil {
+        if deployment.Spec.Template.Spec.Containers[0].SecurityContext != nil {
+            deployment.Spec.Template.Spec.Containers[0].SecurityContext.Privileged = &privileged
+        } else {
+            deployment.Spec.Template.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
+               Privileged: &privileged,
+            }
+        }
+    }
+}

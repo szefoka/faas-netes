@@ -21,9 +21,6 @@ local:
 
 build-docker:
 	docker build \
-    --no-cache \
-	--build-arg GIT_COMMIT=$(GIT_COMMIT) \
-	--build-arg VERSION=$(VERSION) \
 	-t $(OWNER)/$(IMG_NAME):$(TAG) .
 
 .PHONY: build-buildx

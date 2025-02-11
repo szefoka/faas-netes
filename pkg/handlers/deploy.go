@@ -139,6 +139,10 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
         return nil, err
     }
 
+    fmt.Println(request.EDFParams.Runtime)
+    fmt.Println(request.EDFParams.Deadline)
+    fmt.Println(request.EDFParams.Period)
+
 	initialReplicas := int32p(initialReplicasCount)
 	labels := map[string]string{
 		"faas_function": request.Service,
@@ -236,16 +240,7 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
 
 	factory.ConfigureReadOnlyRootFilesystem(request, deploymentSpec)
 	factory.ConfigureContainerUserID(deploymentSpec)
-
-    if getPrivileged(request) {
-        var privileged bool = true
-        var runasuser int64 = 0
-        deploymentSpec.Spec.Template.Spec.Containers[0].SecurityContext = &corev1.SecurityContext {
-			//ReadOnlyRootFilesystem: &request.ReadOnlyRootFilesystem,
-			Privileged: &privileged,
-			RunAsUser: &runasuser,
-		}
-    }
+    factory.ConfiugrePrivilegedFlag(request, deploymentSpec)
 
 	if err := factory.ConfigureSecrets(request, deploymentSpec, existingSecrets); err != nil {
 		return nil, err
