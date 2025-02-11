@@ -7,6 +7,7 @@ import (
 	types "github.com/openfaas/faas-provider/types"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+    "fmt"
 )
 
 // nonRootFunctionuserID is the user id that is set when DeployHandlerConfig.SetNonRootUser is true.
@@ -15,7 +16,7 @@ const SecurityContextUserID = int64(12000)
 
 // ConfigureContainerUserID sets the UID to 12000 for the function Container.  Defaults to user
 // specified in image metadata if `SetNonRootUser` is `false`. Root == 0.
-func (f *FunctionFactory) ConfigureContainerUserID(deployment *appsv1.Deployment) {
+func (f *FunctionFactory) ConfigureContainerUserID(request types.FunctionDeployment, deployment *appsv1.Deployment) {
 	userID := SecurityContextUserID
 	var functionUser *int64
 
@@ -27,7 +28,12 @@ func (f *FunctionFactory) ConfigureContainerUserID(deployment *appsv1.Deployment
 		deployment.Spec.Template.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{}
 	}
 
-	deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser = functionUser
+    if request.EDFParams == nil {
+	    deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser = functionUser
+    } else {
+        var rootUserId int64 = 0
+	    deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser = &rootUserId
+    }
 }
 
 // ConfigureReadOnlyRootFilesystem will create or update the required settings and mounts to ensure
@@ -74,8 +80,10 @@ func (f *FunctionFactory) ConfigureReadOnlyRootFilesystem(request types.Function
 	}
 }
 
+//This function configures the privileged flag of the deployment based on the EDF settings of the function
 func (f* FunctionFactory) ConfiugrePrivilegedFlag(request types.FunctionDeployment, deployment *appsv1.Deployment) {
     var privileged bool = true
+    fmt.Println("priv flag")
     if request.EDFParams != nil {
         if deployment.Spec.Template.Spec.Containers[0].SecurityContext != nil {
             deployment.Spec.Template.Spec.Containers[0].SecurityContext.Privileged = &privileged

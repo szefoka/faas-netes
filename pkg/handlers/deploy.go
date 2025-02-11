@@ -238,9 +238,9 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
 		},
 	}
 
-	factory.ConfigureReadOnlyRootFilesystem(request, deploymentSpec)
-	factory.ConfigureContainerUserID(deploymentSpec)
     factory.ConfiugrePrivilegedFlag(request, deploymentSpec)
+	factory.ConfigureReadOnlyRootFilesystem(request, deploymentSpec)
+	factory.ConfigureContainerUserID(request, deploymentSpec)
 
 	if err := factory.ConfigureSecrets(request, deploymentSpec, existingSecrets); err != nil {
 		return nil, err

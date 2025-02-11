@@ -122,7 +122,7 @@ func updateDeploymentSpec(
    		deployment.Spec.Template.Spec.Containers[0].Env = env
 
 		factory.ConfigureReadOnlyRootFilesystem(request, deployment)
-		factory.ConfigureContainerUserID(deployment)
+		factory.ConfigureContainerUserID(request, deployment)
 		deployment.Spec.Template.Spec.NodeSelector = map[string]string{}
 
 		labels := map[string]string{
