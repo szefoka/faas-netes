@@ -42,7 +42,8 @@ func MakeDeployHandler(functionNamespace string, factory k8s.FunctionFactory, fu
 		}
 
 		body, _ := io.ReadAll(r.Body)
-
+        fmt.Println("body:")
+        fmt.Println(body)
 		request := types.FunctionDeployment{}
 		err := json.Unmarshal(body, &request)
 		if err != nil {
@@ -236,6 +237,16 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
 	factory.ConfigureReadOnlyRootFilesystem(request, deploymentSpec)
 	factory.ConfigureContainerUserID(deploymentSpec)
 
+    if getPrivileged(request) {
+        var privileged bool = true
+        var runasuser int64 = 0
+        deploymentSpec.Spec.Template.Spec.Containers[0].SecurityContext = &corev1.SecurityContext {
+			//ReadOnlyRootFilesystem: &request.ReadOnlyRootFilesystem,
+			Privileged: &privileged,
+			RunAsUser: &runasuser,
+		}
+    }
+
 	if err := factory.ConfigureSecrets(request, deploymentSpec, existingSecrets); err != nil {
 		return nil, err
 	}
@@ -324,6 +335,9 @@ func buildEnvVars(request *types.FunctionDeployment) ([]corev1.EnvVar, error) {
 	}
 
     if request.EDFParams != nil {
+        fmt.Println(request.EDFParams.Runtime)
+        fmt.Println(request.EDFParams.Deadline)
+        fmt.Println(request.EDFParams.Period)
         if len(request.EDFParams.Runtime) == 0 {
             return envVars, errors.New("EDF Runtime is missing")
         }
@@ -354,6 +368,10 @@ func buildEnvVars(request *types.FunctionDeployment) ([]corev1.EnvVar, error) {
 	})
 
 	return envVars, nil
+}
+
+func getPrivileged(request types.FunctionDeployment) bool {
+	return request.EDFParams != nil
 }
 
 func int32p(i int32) *int32 {

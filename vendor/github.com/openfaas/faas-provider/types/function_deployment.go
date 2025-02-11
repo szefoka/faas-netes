@@ -39,6 +39,7 @@ type FunctionDeployment struct {
 	// Requests of resources requested by function
 	Requests *FunctionResources `json:"requests,omitempty"`
 
+    // EDF Parameters for the function
     EDFParams *FunctionEDFParams `json:"EDF,omitempty"`
 
 	// ReadOnlyRootFilesystem removes write-access from the root filesystem
@@ -56,8 +57,9 @@ type FunctionResources struct {
 	IntelGPU  string `json:"intel.com/gpu,omitempty"`
 }
 
+// FunctionResources EDF Parameters
 type FunctionEDFParams struct {
     Runtime  string `json:"runtime,omitempty"`
     Deadline string `json:"deadline,omitempty"`
-    Period   string `json:"period,omitempty"`
+    Period  string `json:"period,omitempty"`
 }

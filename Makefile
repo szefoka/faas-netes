@@ -5,7 +5,7 @@ IMG_NAME?=faas-netes
 VERBOSE?=false
 
 TAG?=latest
-OWNER?=openfaas
+OWNER?=szefoka
 SERVER?=ttl.sh
 export DOCKER_CLI_EXPERIMENTAL=enabled
 export DOCKER_BUILDKIT=1
@@ -21,9 +21,10 @@ local:
 
 build-docker:
 	docker build \
+    --no-cache \
 	--build-arg GIT_COMMIT=$(GIT_COMMIT) \
 	--build-arg VERSION=$(VERSION) \
-	-t $(SERVER)/$(OWNER)/$(IMG_NAME):$(TAG) .
+	-t $(OWNER)/$(IMG_NAME):$(TAG) .
 
 .PHONY: build-buildx
 build-buildx:
