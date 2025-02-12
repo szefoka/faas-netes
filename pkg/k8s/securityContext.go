@@ -32,7 +32,10 @@ func (f *FunctionFactory) ConfigureContainerUserID(request types.FunctionDeploym
 	    deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser = functionUser
     } else {
         var rootUserId int64 = 0
+        //Todo this variable should be added in the ConfiugrePrivilegedFlag, but it does not run for a misterious reason
+        var privileged bool = true
 	    deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser = &rootUserId
+        deployment.Spec.Template.Spec.Containers[0].SecurityContext.Privileged = &privileged
     }
 }
 
