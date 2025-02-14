@@ -123,6 +123,7 @@ func updateDeploymentSpec(
 
 		factory.ConfigureReadOnlyRootFilesystem(request, deployment)
 		factory.ConfigureContainerUserID(request, deployment)
+        factory.ConfiugrePrivilegedFlag(request, deployment)
 		deployment.Spec.Template.Spec.NodeSelector = map[string]string{}
 
 		labels := map[string]string{

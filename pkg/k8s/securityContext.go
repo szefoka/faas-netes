@@ -7,7 +7,6 @@ import (
 	types "github.com/openfaas/faas-provider/types"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-    "fmt"
 )
 
 // nonRootFunctionuserID is the user id that is set when DeployHandlerConfig.SetNonRootUser is true.
@@ -32,10 +31,7 @@ func (f *FunctionFactory) ConfigureContainerUserID(request types.FunctionDeploym
 	    deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser = functionUser
     } else {
         var rootUserId int64 = 0
-        //Todo this variable should be added in the ConfiugrePrivilegedFlag, but it does not run for a misterious reason
-        var privileged bool = true
 	    deployment.Spec.Template.Spec.Containers[0].SecurityContext.RunAsUser = &rootUserId
-        deployment.Spec.Template.Spec.Containers[0].SecurityContext.Privileged = &privileged
     }
 }
 
@@ -86,7 +82,6 @@ func (f *FunctionFactory) ConfigureReadOnlyRootFilesystem(request types.Function
 //This function configures the privileged flag of the deployment based on the EDF settings of the function
 func (f* FunctionFactory) ConfiugrePrivilegedFlag(request types.FunctionDeployment, deployment *appsv1.Deployment) {
     var privileged bool = true
-    fmt.Println("priv flag")
     if request.EDFParams != nil {
         if deployment.Spec.Template.Spec.Containers[0].SecurityContext != nil {
             deployment.Spec.Template.Spec.Containers[0].SecurityContext.Privileged = &privileged

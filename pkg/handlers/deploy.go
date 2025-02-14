@@ -42,8 +42,6 @@ func MakeDeployHandler(functionNamespace string, factory k8s.FunctionFactory, fu
 		}
 
 		body, _ := io.ReadAll(r.Body)
-        fmt.Println("body:")
-        fmt.Println(body)
 		request := types.FunctionDeployment{}
 		err := json.Unmarshal(body, &request)
 		if err != nil {
@@ -139,10 +137,6 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
         return nil, err
     }
 
-    fmt.Println(request.EDFParams.Runtime)
-    fmt.Println(request.EDFParams.Deadline)
-    fmt.Println(request.EDFParams.Period)
-
 	initialReplicas := int32p(initialReplicasCount)
 	labels := map[string]string{
 		"faas_function": request.Service,
@@ -237,7 +231,6 @@ func makeDeploymentSpec(request types.FunctionDeployment, existingSecrets map[st
 			},
 		},
 	}
-
     factory.ConfiugrePrivilegedFlag(request, deploymentSpec)
 	factory.ConfigureReadOnlyRootFilesystem(request, deploymentSpec)
 	factory.ConfigureContainerUserID(request, deploymentSpec)
@@ -330,9 +323,6 @@ func buildEnvVars(request *types.FunctionDeployment) ([]corev1.EnvVar, error) {
 	}
 
     if request.EDFParams != nil {
-        fmt.Println(request.EDFParams.Runtime)
-        fmt.Println(request.EDFParams.Deadline)
-        fmt.Println(request.EDFParams.Period)
         if len(request.EDFParams.Runtime) == 0 {
             return envVars, errors.New("EDF Runtime is missing")
         }
