@@ -322,7 +322,8 @@ func buildEnvVars(request *types.FunctionDeployment) ([]corev1.EnvVar, error) {
 		})
 	}
 
-    if request.EDFParams != nil {
+    //if request.EDFParams != nil {
+    if len(request.EDFParams.Runtime) != 0 && len(request.EDFParams.Deadline) != 0 {  //Very quick and dirty fix...
         if len(request.EDFParams.Runtime) == 0 {
             return envVars, errors.New("EDF Runtime is missing")
         }
